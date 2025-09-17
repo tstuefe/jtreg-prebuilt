@@ -16,4 +16,4 @@ JTREG_TEST="${OPENJDK_ROOT}/${1}/source/test/jdk/${3}"
 PROBLEMLIST="${OPENJDK_ROOT}/${1}/source/test/jdk/ProblemList.txt"
 
 echo "jtreg -retain -conc:4 -jdk:${JDK_DIR} -nativepath:${NATIVES_DIR} -exclude:${PROBLEMLIST}  ${JTREG_TEST}"
-jtreg -retain -conc:4 -jdk:${JDK_DIR} -nativepath:${NATIVES_DIR}  -exclude:${PROBLEMLIST} ${JTREG_TEST}
+jtreg  -J-Djavatest.maxOutputSize=2000000 -retain -conc:4 -jdk:${JDK_DIR} -nativepath:${NATIVES_DIR}  -exclude:${PROBLEMLIST} ${JTREG_TEST}
