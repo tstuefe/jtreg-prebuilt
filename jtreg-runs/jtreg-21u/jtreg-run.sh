@@ -15,5 +15,7 @@ NATIVES_DIR="${OUTPUT_DIR}/images/test/hotspot/jtreg/native"
 JTREG_TEST="${OPENJDK_ROOT}/${1}/source/test/hotspot/jtreg/${3}"
 PROBLEMLIST="${OPENJDK_ROOT}/${1}/source/test/hotspot/jtreg/ProblemList.txt"
 
-echo "jtreg -retain -conc:4 -jdk:${JDK_DIR} -nativepath:${NATIVES_DIR} -exclude:${PROBLEMLIST}  ${JTREG_TEST}"
-jtreg  -J-Djavatest.maxOutputSize=2000000  -retain -conc:4 -jdk:${JDK_DIR} -nativepath:${NATIVES_DIR}  -exclude:${PROBLEMLIST} ${JTREG_TEST}
+COMMAND="jtreg  -J-Djavatest.maxOutputSize=2000000  -retain -conc:4 -jdk:${JDK_DIR} -nativepath:${NATIVES_DIR}  -exclude:${PROBLEMLIST} ${JTREG_TEST}"
+
+echo $COMMAND
+$COMMAND
