@@ -31,6 +31,7 @@ HOTSPOT_OR_JDK="hotspot"
 EXTRA_JTREG_OPTIONS=""
 CONCURRENCY="8"
 DRY_RUN=0
+TESTS=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -84,9 +85,7 @@ while [[ $# -gt 0 ]]; do
       exit 1
       ;;
     *)
-      TESTS="$1"
-# for now no support for multiple tests	  
-#      TESTS="${TESTS} ${1}"
+      TESTS="${TESTS} ${1}"
       shift # past argument
       ;;
   esac
@@ -111,21 +110,6 @@ else
 	exit -1;
 fi
 
-if [ "${TESTS}" == "ALL" ]; then
-	if [ -z $EXTRA_JTREG_OPTIONS ]; then
-		echo "ALL not allowed for run mode"
-		printUsage
-		exit -1;
-	fi
-	JTREG_TESTS="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}"
-elif [[ ${TESTS} == :* ]]; then
-	# group
-   	JTREG_TESTS="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}${TESTS}"
-else
-	# individual test(s)
-   	JTREG_TESTS="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}/${TESTS}"
-fi
-
 OUTPUT_DIR="${OPENJDK_ROOT}/${CODELINE}/output-${VERSION}"
 
 if [  ! -d "${OUTPUT_DIR}" ]; then
@@ -142,21 +126,38 @@ PROBLEMLIST="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}/ProblemList.t
 
 echo "Codeline: ${CODELINE}"
 echo "Version: ${VERSION}"
-echo "Tests: ${TESTS}"
-echo "Tests (resolved): ${JTREG_TESTS}"
 echo "Testee: ${TESTEE_JDK_DIR}"
 echo "Native Path: ${NATIVE_PATH}"
 echo "Extra jtreg options: ${EXTRA_JTREG_OPTIONS}"
 echo ""
 
-COMMAND="jtreg -J-Djavatest.maxOutputSize=2000000 -retain -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST} ${EXTRA_JTREG_OPTIONS} ${JTREG_TESTS}"
+for TEST in $TESTS; do
 
-echo $COMMAND
+	# Process each test input, then start test
+	if [ "${TEST}" == "ALL" ]; then
+		if [ -z $EXTRA_JTREG_OPTIONS ]; then
+			echo "ALL not allowed for run mode"
+			printUsage
+			exit -1;
+		fi
+		JTREG_TEST="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}"
+	elif [[ ${TEST} == :* ]]; then
+		# group
+		JTREG_TEST="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}${TEST}"
+	else
+		# individual test(s)
+		JTREG_TEST="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}/${TEST}"
+	fi
 
-if [[ $DRY_RUN == 1 ]]; then
-	echo "dry run - good bye"
-	exit 0;
-fi
+	COMMAND="jtreg -J-Djavatest.maxOutputSize=2000000 -retain -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST} ${EXTRA_JTREG_OPTIONS} ${JTREG_TEST}"
 
-$COMMAND
+	echo $COMMAND
+
+	if [[ $DRY_RUN == 1 ]]; then
+		echo "dry run - good bye"
+	else
+		$COMMAND
+	fi
+
+done
 
