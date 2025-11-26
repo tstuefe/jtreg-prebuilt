@@ -149,7 +149,12 @@ for TEST in $TESTS; do
 		JTREG_TEST="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}/${TEST}"
 	fi
 
-	COMMAND="jtreg -J-Djavatest.maxOutputSize=2000000 -retain -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST} ${EXTRA_JTREG_OPTIONS} ${JTREG_TEST}"
+	# Note: 
+	# -automatic is needed to skip manual tests. Forgetting it may cause hangs at the first "endless"
+	#  manual test (e.g. TestCheckedReleaseCriticalArray)
+	# -retain to retain test files for later analysis
+
+	COMMAND="jtreg -J-Djavatest.maxOutputSize=2000000 -retain -automatic -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST} ${EXTRA_JTREG_OPTIONS} ${JTREG_TEST}"
 
 	echo $COMMAND
 
