@@ -12,13 +12,52 @@ Usage: $0
 			[--list] 
 			[--report] 
 			[--failed-only] 
+			[--notrun-only] 
 			[--extra-jtreg-options <extra jtreg options>] 
 			<test>|<testgroup>|ALL
-If neither --hotspot nor --jdk are given, --hotspot is default
-<codeline> defaults to: "jdk-jdk"
-<version> defaults to:  "fastdebug"
-<test> is the name of a test (jtreg test root relative path, e.g. "runtime/ErrorHandling")
-<testgroup> is marked by a leading colon, e.g ":tier1"
+  If neither --hotspot nor --jdk are given, --hotspot is default
+  <codeline> defaults to: "jdk-jdk"
+  <version> defaults to:  "fastdebug"
+  --failed-only: 	only run tests that did fail
+  --notrun-only: 	only run tests that did not run yet
+  --report: 		only report, don't run tests
+  --list: 			only list, don't run test
+  <test> 			name of a test (jtreg test root relative path, e.g. "runtime/ErrorHandling")
+  <testgroup> 		e.g ":tier1" (leading colon)
+
+Examples:
+
+  Run all tests in hotspot tier2
+  $0 --hotspot :tier1
+    or
+  $0 :tier1
+
+  (--hotspot can be omitted, its the default)
+
+  Generate report (e.g. if run was interupted) in hotspot:
+  $0 --report ALL
+    
+  Generate report (e.g. if run was interupted) in jdk:
+  $0 --jdk --report ALL
+
+  List all tests in hotspot tier2
+  $0 --list :tier1
+
+  List all failed tests in hotspot tier2:
+  $0 --list --failed-only :tier2
+
+  List all failed tests in jdk:
+  $0 --jdk --list --failed-only ALL
+
+  Repeat tests, but only retry failed tests, in hotspot tier1:
+  $0 --failed-only :tier1
+
+  Repeat tests, but only retry failed tests, in jdk:
+  $0 --jdk --failed-only :tier1
+
+  Continue running tests after tests were interrupted (e.g. next day), in hotspot, tier1:
+  $0 --notrun-only :tier1
+
 EOM
 `
 	echo "$USAGE"
@@ -72,6 +111,10 @@ while [[ $# -gt 0 ]]; do
       ;;
 	--failed-only)
 	  EXTRA_JTREG_OPTIONS="${EXTRA_JTREG_OPTIONS} -status:error|failed"
+      shift # past argument
+      ;;
+	--notrun-only)
+	  EXTRA_JTREG_OPTIONS="${EXTRA_JTREG_OPTIONS} -status:notRun"
       shift # past argument
       ;;
 	--extra-jtreg-options)
