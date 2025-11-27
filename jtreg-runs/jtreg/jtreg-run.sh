@@ -153,6 +153,8 @@ else
 	exit -1;
 fi
 
+OPENJDK_ROOT="/shared/projects/openjdk"
+
 OUTPUT_DIR="${OPENJDK_ROOT}/${CODELINE}/output-${VERSION}"
 
 if [  ! -d "${OUTPUT_DIR}" ]; then
