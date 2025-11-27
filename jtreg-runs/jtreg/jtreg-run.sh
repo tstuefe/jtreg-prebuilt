@@ -206,7 +206,10 @@ for TEST in $TESTS; do
 	if [[ $DRY_RUN == 1 ]]; then
 		echo "dry run - good bye"
 	else
+		# switch off error state lest it stops if the first in a series of tests had jtreg return an error code (eg no tests selected causes that)
+		set +e
 		$COMMAND
+		set -e
 	fi
 
 done
