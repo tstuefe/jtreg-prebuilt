@@ -7,9 +7,10 @@ Usage: $0
             --jdk|--hotspot           (defaults to hotspot)
 			[-c|--codeline <codeline> (default "jdk-jdk")] 
 			[-v|--version <version>   (default "fastdebug")]
-			[--dry-run]
+			[--images-dir <path>      (default off)]
+			[--dry-run                (default off)]
 			[--concurrency <concurrency> (default 8)]
-			[--list] 
+			[--list]
 			[--report] 
 			[--failed-only] 
 			[--notrun-only] 
@@ -18,6 +19,8 @@ Usage: $0
   If neither --hotspot nor --jdk are given, --hotspot is default
   <codeline> defaults to: "jdk-jdk"
   <version> defaults to:  "fastdebug"
+  --images-dir:     overrides <codeline> and <version>, determines the images dir
+                    containing the testee jdk and the native test parts
   --failed-only: 	only run tests that did fail
   --notrun-only: 	only run tests that did not run yet
   --report: 		only report, don't run tests
@@ -71,6 +74,7 @@ EXTRA_JTREG_OPTIONS=""
 CONCURRENCY="8"
 DRY_RUN=0
 TESTS=""
+IMAGES_DIR=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -81,6 +85,11 @@ while [[ $# -gt 0 ]]; do
       ;;
 	-V|--version)
       VERSION="$2"
+      shift # past argument
+      shift # past value
+      ;;
+	--images-dir)
+	  IMAGES_DIR="$2"
       shift # past argument
       shift # past value
       ;;
@@ -143,11 +152,11 @@ fi
 if [ "$HOTSPOT_OR_JDK" == "hotspot" ]; then
 	echo "Hotspot mode"
 	JTREG_TEST_ROOT="test/hotspot/jtreg"
-	NATIVES_DIR="images/test/hotspot/jtreg/native"
+	NATIVES_DIR_SUB="test/hotspot/jtreg/native"
 elif [ "$HOTSPOT_OR_JDK" == "jdk" ]; then
 	echo "jdk mode"
 	JTREG_TEST_ROOT="test/jdk"
-	NATIVES_DIR="images/test/jdk/jtreg/native"
+	NATIVES_DIR_SUB="test/jdk/jtreg/native"
 else
 	echo "Unknown mode"
 	exit -1;
@@ -155,17 +164,18 @@ fi
 
 OPENJDK_ROOT="/shared/projects/openjdk"
 
-OUTPUT_DIR="${OPENJDK_ROOT}/${CODELINE}/output-${VERSION}"
+if [ -z $IMAGES_DIR ]; then
+	IMAGES_DIR="${OPENJDK_ROOT}/${CODELINE}/output-${VERSION}/images"
+fi
 
-if [  ! -d "${OUTPUT_DIR}" ]; then
-	echo "${OUTPUT_DIR} does not exist"
+if [  ! -d "${IMAGES_DIR}" ]; then
+	echo "${IMAGES_DIR} does not exist"
 	exit -1;
 fi
 
+TESTEE_JDK_DIR="${IMAGES_DIR}/jdk"
 
-TESTEE_JDK_DIR="${OUTPUT_DIR}/images/jdk"
-
-NATIVE_PATH="${OUTPUT_DIR}/${NATIVES_DIR}"
+NATIVE_PATH="${IMAGES_DIR}/${NATIVES_DIR_SUB}"
 
 PROBLEMLIST="${OPENJDK_ROOT}/${CODELINE}/source/${JTREG_TEST_ROOT}/ProblemList.txt"
 
