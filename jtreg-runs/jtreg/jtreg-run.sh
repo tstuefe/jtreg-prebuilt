@@ -218,7 +218,7 @@ for TEST in $TESTS; do
 	else
 		# switch off error state lest it stops if the first in a series of tests had jtreg return an error code (eg no tests selected causes that)
 		set +e
-		$COMMAND
+		time $COMMAND
 		set -e
 	fi
 
