@@ -14,6 +14,7 @@ Usage: $0
 			[--report] 
 			[--failed-only] 
 			[--notrun-only] 
+			[--manual-only] 
 			[--extra-jtreg-options <extra jtreg options>] 
 			<test>|<testgroup>|ALL
   If neither --hotspot nor --jdk are given, --hotspot is default
@@ -23,6 +24,7 @@ Usage: $0
                     containing the testee jdk and the native test parts
   --failed-only: 	only run tests that did fail
   --notrun-only: 	only run tests that did not run yet
+  --manual-only: 	only run manual tests (default: only run automatic tests)
   --report: 		only report, don't run tests
   --list: 			only list, don't run test
   <test> 			name of a test (jtreg test root relative path, e.g. "runtime/ErrorHandling")
@@ -75,6 +77,7 @@ CONCURRENCY="8"
 DRY_RUN=0
 TESTS=""
 IMAGES_DIR=""
+MANUAL_OR_AUTOMATIC="-automatic"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -124,6 +127,10 @@ while [[ $# -gt 0 ]]; do
       ;;
 	--notrun-only)
 	  EXTRA_JTREG_OPTIONS="${EXTRA_JTREG_OPTIONS} -status:notRun"
+      shift # past argument
+      ;;
+	--manual-only)
+	  MANUAL_OR_AUTOMATIC="-manual"
       shift # past argument
       ;;
 	--extra-jtreg-options)
@@ -209,7 +216,7 @@ for TEST in $TESTS; do
 	#  manual test (e.g. TestCheckedReleaseCriticalArray)
 	# -retain to retain test files for later analysis
 
-	COMMAND="jtreg -J-Djavatest.maxOutputSize=2000000 -retain -automatic -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST} ${EXTRA_JTREG_OPTIONS} ${JTREG_TEST}"
+	COMMAND="jtreg -J-Djavatest.maxOutputSize=2000000 -retain ${MANUAL_OR_AUTOMATIC} -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST} ${EXTRA_JTREG_OPTIONS} ${JTREG_TEST}"
 
 	echo $COMMAND
 
