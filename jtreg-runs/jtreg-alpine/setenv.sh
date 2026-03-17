@@ -8,7 +8,7 @@ export CODELINE_DEFAULT="jdk-jdk"
 export JTREG_VERSION="jtreg"
 
 # VM to run tests with
-export JT_JAVA=${OPENJDK_ROOT}/jdks/sapmachine25
+export JT_JAVA=${OPENJDK_ROOT}/jdks//adopt-25-alpine
 
 export PATH=${OPENJDK_ROOT}/jtreg-prebuilt/${JTREG_VERSION}/bin/:$PATH
 

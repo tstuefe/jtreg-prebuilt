@@ -1,11 +1,17 @@
 #!/bin/bash
 set -eu
 
+# The following variables shall be set by the environment.
+if [[ -z "$CODELINE_DEFAULT" || -z "$OPENJDK_ROOT" || -z "$JT_JAVA" ]]; then
+    echo "env var missing";
+    exit -1
+fi
+
 function printUsage() {
 	local USAGE=`cat << EOM
 Usage: $0 
             --jdk|--hotspot           (defaults to hotspot)
-			[-c|--codeline <codeline> (default "jdk-jdk")] 
+			[-c|--codeline <codeline> (default "${CODELINE_DEFAULT}")] 
 			[-v|--version <version>   (default "fastdebug")]
 			[--images-dir <path>      (default off)]
 			[--dry-run                (default off)]
@@ -69,7 +75,7 @@ EOM
 }
 
 # defaults
-CODELINE="jdk-jdk"
+CODELINE="$CODELINE_DEFAULT"
 VERSION="fastdebug"
 HOTSPOT_OR_JDK="hotspot"
 EXTRA_JTREG_OPTIONS=""
