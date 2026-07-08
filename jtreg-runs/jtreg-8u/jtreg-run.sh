@@ -9,32 +9,42 @@ fi
 
 function printUsage() {
 	local USAGE=`cat << EOM
-Usage: $0 
+Usage: $0
             --jdk|--hotspot           (defaults to hotspot)
-			[-c|--codeline <codeline> (default "${CODELINE_DEFAULT}")] 
-			[-v|--version <version>   (default "fastdebug")]
-			[--images-dir <path>      (default off)]
-			[--dry-run                (default off)]
-			[--concurrency <concurrency> (default 8)]
-			[--list]
-			[--report] 
-			[--failed-only] 
-			[--notrun-only] 
-			[--manual-only] 
-			[--extra-jtreg-options <extra jtreg options>] 
-			<test>|<testgroup>|ALL
-  If neither --hotspot nor --jdk are given, --hotspot is default
-  <codeline> defaults to: "jdk-jdk"
-  <version> defaults to:  "fastdebug"
-  --images-dir:     overrides <codeline> and <version>, determines the images dir
+		[-c|--codeline <codeline> (default "${CODELINE_DEFAULT}")]
+		[-v|--version <version>   (default "fastdebug")]
+		[--images-dir <path>      (default off)]
+		[--dry-run                (default off)]
+		[-c|--concurrency <concurrency> (default 8)]
+		[--list]
+		[--report]
+		[--failed-only]
+		[--notrun-only]
+		[--manual-only]
+		[--vmoptions <vm options>]
+		[--extra-jtreg-options <extra jtreg options>]
+		[--help]
+		<test>|<testgroup>|ALL
+
+Options:
+  --jdk|--hotspot:  Select test suite (default: hotspot)
+  -c|--codeline:    Codeline to test (default: "${CODELINE_DEFAULT}")
+  -v|--version:     Build version (default: "fastdebug")
+  --images-dir:     Override codeline/version, specify images directory directly
                     containing the testee jdk and the native test parts
-  --failed-only: 	only run tests that did fail
-  --notrun-only: 	only run tests that did not run yet
-  --manual-only: 	only run manual tests (default: only run automatic tests)
-  --report: 		only report, don't run tests
-  --list: 			only list, don't run test
-  <test> 			name of a test (jtreg test root relative path, e.g. "runtime/ErrorHandling")
-  <testgroup> 		e.g ":tier1" (leading colon)
+  --dry-run:        Print command without executing
+  -c|--concurrency: Number of concurrent tests (default: 8)
+  --list:           Only list tests, don't run them
+  --report:         Only generate report, don't run tests
+  --failed-only:    Only run tests that failed
+  --notrun-only:    Only run tests that haven't run yet
+  --manual-only:    Only run manual tests (default: only run automatic tests)
+  --vmoptions:      VM options to pass to test JVMs (e.g., "-Xmx4g -XX:+UseG1GC")
+  --extra-jtreg-options: Additional jtreg options
+  --help:           Show this help message
+  <test>:           Test path relative to jtreg test root (e.g., "runtime/ErrorHandling")
+  <testgroup>:      Test group with leading colon (e.g., ":tier1")
+  ALL:              All tests (only valid with --report, --list, or filter options)
 
 Examples:
 
@@ -79,6 +89,7 @@ CODELINE="$CODELINE_DEFAULT"
 VERSION="fastdebug"
 HOTSPOT_OR_JDK="hotspot"
 EXTRA_JTREG_OPTIONS=""
+VMOPTIONS=""
 CONCURRENCY="8"
 DRY_RUN=0
 TESTS=""
@@ -137,18 +148,27 @@ while [[ $# -gt 0 ]]; do
       ;;
 	--manual-only)
 	  MANUAL_OR_AUTOMATIC="-manual"
-      shift # past argument
-      ;;
+	     shift # past argument
+	     ;;
+	--vmoptions)
+	  VMOPTIONS="-vmoptions:$2"
+	     shift # past argument
+	     shift # past value
+	     ;;
 	--extra-jtreg-options)
 	  EXTRA_JTREG_OPTIONS="${EXTRA_JTREG_OPTIONS} $2"
-      shift # past argument
-      shift # past value
-      ;;
-    -*|--*)
-      echo "Unknown option $1"
+	     shift # past argument
+	     shift # past value
+	     ;;
+	--help|-h)
 	  printUsage
-      exit 1
-      ;;
+	  exit 0
+	  ;;
+	   -*|--*)
+	     echo "Unknown option $1"
+	  printUsage
+	     exit 1
+	     ;;
     *)
       TESTS="${TESTS} ${1}"
       shift # past argument
@@ -156,7 +176,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ -z $TESTS ]; then
+if [ -z "$TESTS" ]; then
 	echo "No tests given"
 	printUsage
 	exit -1;
@@ -222,16 +242,27 @@ for TEST in $TESTS; do
 	#  manual test (e.g. TestCheckedReleaseCriticalArray)
 	# -retain to retain test files for later analysis
 
-	COMMAND="jtreg -J-Djavatest.maxOutputSize=2000000 -retain ${MANUAL_OR_AUTOMATIC} -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST} ${EXTRA_JTREG_OPTIONS} ${JTREG_TEST}"
+	# Build command as array to properly handle arguments with spaces
+	COMMAND=(jtreg -J-Djavatest.maxOutputSize=2000000 -retain ${MANUAL_OR_AUTOMATIC} -conc:${CONCURRENCY} -jdk:${TESTEE_JDK_DIR} -nativepath:${NATIVE_PATH} -exclude:${PROBLEMLIST})
+	
+	# Add vmoptions if specified (as single argument)
+	if [ -n "$VMOPTIONS" ]; then
+		COMMAND+=("${VMOPTIONS}")
+	fi
+	
+	# Add extra jtreg options and test
+	COMMAND+=(${EXTRA_JTREG_OPTIONS} ${JTREG_TEST})
 
-	echo $COMMAND
+	# Print command with proper quoting to show what will be executed
+	printf '%q ' "${COMMAND[@]}"
+	echo
 
 	if [[ $DRY_RUN == 1 ]]; then
 		echo "dry run - good bye"
 	else
 		# switch off error state lest it stops if the first in a series of tests had jtreg return an error code (eg no tests selected causes that)
 		set +e
-		time $COMMAND
+		time "${COMMAND[@]}"
 		set -e
 	fi
 
