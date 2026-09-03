@@ -1,7 +1,14 @@
-# run jdk11 jtreg with jtreg 6.1
 
 export OPENJDK_ROOT=/shared/projects/openjdk
 
+export CODELINE_DEFAULT="jdk-jdk8u-dev"
+
+# The JTREG version to use. Refers to prebuilt dir.
+# Valid values are "jtreg" (just a symlink to the latest version) or specific versions like "jtreg-7.5.2"
+export JTREG_VERSION="jtreg-5.1-b01"
+
+# VM to run tests with
 export JT_JAVA=${OPENJDK_ROOT}/jdks/adopt-8
-export PATH=${OPENJDK_ROOT}/jtreg-prebuilt/jtreg-5.1/bin/:$PATH
+
+export PATH=${OPENJDK_ROOT}/jtreg-prebuilt/${JTREG_VERSION}/bin/:$PATH
 
